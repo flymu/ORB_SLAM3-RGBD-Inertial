@@ -194,3 +194,6 @@ add_executable(stereo_inertial_tum_vi
 Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
 target_link_libraries(stereo_inertial_tum_vi ${PROJECT_NAME})
 
+add_executable(rgbd_inertial_vi
+Examples/RGBD-Inertial/rgbd_inertial.cc)
+target_link_libraries(rgbd_inertial_vi ${PROJECT_NAME})
