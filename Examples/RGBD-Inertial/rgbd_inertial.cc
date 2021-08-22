@@ -47,11 +47,11 @@ int main(int argc, char **argv)
     string strAssociationFilename = string(argv[4]);
     LoadImages(strAssociationFilename, vstrImageFilenamesRGB, vstrImageFilenamesD, vTimestamps);
 
-    vector< vector<cv::Point3f> > vAcc, vGyro;
-    vector< vector<double> > vTimestampsImu;
-
-
-
+    vector<cv::Point3f> vAcc, vGyro;
+    vector<double> vTimestampsImu;
+    int first_imu = 0;
+    std::string imu_path = strAssociationFilename + "/imu/data.txt";
+    LoadIMU(imu_path, vTimestampsImu, vAcc, vGyro);
 
     // Check consistency in the number of images and depthmaps
     int nImages = vstrImageFilenamesRGB.size();
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_RGBD,true);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -75,6 +75,7 @@ int main(int argc, char **argv)
 
     // Main loop
     cv::Mat imRGB, imD;
+    vector<ORB_SLAM3::IMU::Point> vImuMeas;
     for(int ni=0; ni<nImages; ni++)
     {
         // Read image and depthmap from file
@@ -95,8 +96,22 @@ int main(int argc, char **argv)
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
 #endif
 
+        // Load imu measurements from previous frame
+        vImuMeas.clear();
+
+        if(ni>0)
+        {
+            while(vTimestampsImu[first_imu]<=vTimestampsCam[ni])
+            {
+                vImuMeas.push_back(ORB_SLAM3::IMU::Point(vAcc[first_imu].x, vAcc[first_imu].y, vAcc[first_imu].z,
+                                                         vGyro[first_imu].x,vGyro[first_imu].y,vGyro[first_imu].z,
+                                                         vTimestampsImu[first_imu]));
+                first_imu++;
+            }
+        }
+
         // Pass the image to the SLAM system
-        SLAM.TrackRGBD(imRGB,imD,tframe);
+        SLAM.TrackRGBD(imRGB, imD, tframe, vImuMeas);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
