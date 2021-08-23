@@ -34,9 +34,10 @@ void LoadIMU(const string &strImuPath, vector<double> &vTimeStamps, vector<cv::P
 
 int main(int argc, char **argv)
 {
-    if(argc != 5)
+    // use the euroc format data package
+    if(argc != 4)
     {
-        cerr << endl << "Usage: ./rgbd_tum path_to_vocabulary path_to_settings path_to_sequence path_to_association" << endl;
+        cerr << endl << "Usage: ./rgbd_tum path_to_vocabulary path_to_settings path_to_sequence" << endl;
         return 1;
     }
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
     vector<string> vstrImageFilenamesRGB;
     vector<string> vstrImageFilenamesD;
     vector<double> vTimestamps;
-    string strAssociationFilename = string(argv[4]);
+    string strAssociationFilename = string(argv[3]);
     LoadImages(strAssociationFilename, vstrImageFilenamesRGB, vstrImageFilenamesD, vTimestamps);
 
     vector<cv::Point3f> vAcc, vGyro;
@@ -52,6 +53,10 @@ int main(int argc, char **argv)
     int first_imu = 0;
     std::string imu_path = strAssociationFilename + "/imu/data.txt";
     LoadIMU(imu_path, vTimestampsImu, vAcc, vGyro);
+
+    while(vTimestampsImu[first_imu]<=vTimestamps[0])
+            first_imu++;
+    first_imu--; // first imu measurement to be considered
 
     // Check consistency in the number of images and depthmaps
     int nImages = vstrImageFilenamesRGB.size();
@@ -101,7 +106,7 @@ int main(int argc, char **argv)
 
         if(ni>0)
         {
-            while(vTimestampsImu[first_imu]<=vTimestampsCam[ni])
+            while(vTimestampsImu[first_imu]<=vTimestamps[ni])
             {
                 vImuMeas.push_back(ORB_SLAM3::IMU::Point(vAcc[first_imu].x, vAcc[first_imu].y, vAcc[first_imu].z,
                                                          vGyro[first_imu].x,vGyro[first_imu].y,vGyro[first_imu].z,
