@@ -72,7 +72,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
     // Load IMU parameters
     bool b_parse_imu = true;
-    if(sensor==System::IMU_MONOCULAR || sensor==System::IMU_STEREO) || sensor== System::IMU_RGBD)
+    if(sensor==System::IMU_MONOCULAR || sensor==System::IMU_STEREO || sensor== System::IMU_RGBD)
     {
         b_parse_imu = ParseIMUParamFile(fSettings);
         if(!b_parse_imu)

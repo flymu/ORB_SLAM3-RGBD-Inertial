@@ -280,6 +280,9 @@ private:
 
     std::mutex *mpMutexImu;
 
+    // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
+    float mDepthMapFactor = 1000;
+
 public:
     GeometricCamera* mpCamera, *mpCamera2;
 
